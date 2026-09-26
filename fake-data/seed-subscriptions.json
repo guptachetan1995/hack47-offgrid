@@ -1,0 +1,58 @@
+[
+  {
+    "id": "sub_streamvault",
+    "service": "StreamVault Plus",
+    "status": "active",
+    "priceHistory": [
+      { "amount": 8.99, "currency": "USD", "effectiveFromDaysAgo": 450 },
+      { "amount": 12.99, "currency": "USD", "effectiveFromDaysAgo": 24 }
+    ],
+    "renewalInDays": 6,
+    "lastUsedAtDaysAgo": 3,
+    "trialEndsInDays": null
+  },
+  {
+    "id": "sub_cloudbackup",
+    "service": "CloudBackup Pro",
+    "status": "active",
+    "priceHistory": [
+      { "amount": 9.99, "currency": "USD", "effectiveFromDaysAgo": 600 }
+    ],
+    "renewalInDays": 20,
+    "lastUsedAtDaysAgo": 116,
+    "trialEndsInDays": null
+  },
+  {
+    "id": "sub_designtool",
+    "service": "PixelCraft Design",
+    "status": "trial",
+    "priceHistory": [
+      { "amount": 0, "currency": "USD", "effectiveFromDaysAgo": 11 }
+    ],
+    "renewalInDays": null,
+    "lastUsedAtDaysAgo": 1,
+    "trialEndsInDays": 3
+  },
+  {
+    "id": "sub_musicapp",
+    "service": "SonicStream",
+    "status": "active",
+    "priceHistory": [
+      { "amount": 5.99, "currency": "USD", "effectiveFromDaysAgo": 400 }
+    ],
+    "renewalInDays": 40,
+    "lastUsedAtDaysAgo": 1,
+    "trialEndsInDays": null
+  },
+  {
+    "id": "sub_cloudstorage",
+    "service": "SafeVault Storage",
+    "status": "active",
+    "priceHistory": [
+      { "amount": 3.99, "currency": "USD", "effectiveFromDaysAgo": 380 }
+    ],
+    "renewalInDays": 55,
+    "lastUsedAtDaysAgo": 2,
+    "trialEndsInDays": null
+  }
+]

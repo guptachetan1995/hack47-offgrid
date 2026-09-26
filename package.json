@@ -1,0 +1,38 @@
+{
+  "name": "hack47-offgrid-subscription-guard",
+  "version": "0.1.0",
+  "description": "Agent that flags subscription price hikes, quiet usage, and trial conversions, and drafts an action a human must approve before anything changes",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "build:pages": "node scripts/build-pages.js",
+    "test": "jest --passWithNoTests",
+    "lint": "eslint src/ tests/ scripts/ --ext .js,.jsx --fix",
+    "lint:check": "eslint src/ tests/ scripts/ --ext .js,.jsx"
+  },
+  "keywords": [
+    "hack47-offgrid",
+    "agent",
+    "subscriptions"
+  ],
+  "author": "Chetan Gupta",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "@babel/preset-react": "^7.22.0",
+    "babel-jest": "^29.5.0",
+    "esbuild": "0.28.2",
+    "eslint": "^8.42.0",
+    "eslint-plugin-react": "^7.32.0",
+    "jest": "^29.5.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
