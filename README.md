@@ -13,6 +13,8 @@ on the dashboard.
 **Try it live:** https://guptachetan1995.github.io/hack47-offgrid/ (runs entirely in your
 browser on fictional data, nothing is sent anywhere, reload to reset)
 
+**Demo video (2:10):** https://youtu.be/hkDpW_DNd00
+
 **Source:** https://github.com/guptachetan1995/hack47-offgrid
 
 Built for [HACK47: OFFGRID](https://hack47-offgrid.devpost.com/), which has an open brief:

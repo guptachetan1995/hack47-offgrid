@@ -61,8 +61,8 @@ https://github.com/guptachetan1995/hack47-offgrid
 
 ## Demo Video
 
-The demo video is linked from this project's Devpost submission. Its script and shot list
-are in [`docs/video-script.md`](./video-script.md).
+https://youtu.be/hkDpW_DNd00 (2:10). Its script and shot list are in
+[`docs/video-script.md`](./video-script.md).
 
 ## Tech Stack
 
