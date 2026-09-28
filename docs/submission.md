@@ -148,7 +148,7 @@ node.js, react, claude
 
 ## Devpost field: Video demo link
 
-https://youtu.be/hkDpW_DNd00
+https://youtu.be/6hm1KLbyyMc
 
 ## Devpost field: Image gallery
 

@@ -40,7 +40,7 @@ Review and the draft buttons make the same calls as actor `agent`.
 browser on fictional data, or on subscriptions you paste in; nothing is sent anywhere,
 reload to reset)
 
-**Demo video (2:10):** https://youtu.be/hkDpW_DNd00
+**Demo video (2:19):** https://youtu.be/6hm1KLbyyMc
 
 **Source:** https://github.com/guptachetan1995/hack47-offgrid
 
