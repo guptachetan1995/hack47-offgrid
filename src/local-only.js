@@ -1,8 +1,9 @@
-// This app has no real authentication — `actor` is a caller-supplied string in the
-// request body, trusted only because nothing but this same machine can ever reach it.
-// Binding the server to 127.0.0.1 is the primary control (see server.js); this
-// middleware is defense in depth for the case a proxy or a future change to that bind
-// ever puts it on a real interface.
+// Loopback-only is the outer layer: the server binds to 127.0.0.1 (see server.js), and
+// this middleware refuses anything else in case a proxy or a future change to that bind
+// ever puts it on a real interface. It does not decide who the owner is. `actor` is a
+// field in the request body; a request claiming `actor: "owner"` must also carry this
+// run's owner token (server.js), and invoke() refuses owner-only calls from any other
+// actor. None of this is multi-user authentication.
 
 const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 

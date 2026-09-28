@@ -12,6 +12,7 @@ function materialize(entry) {
     id: entry.id,
     service: entry.service,
     status: entry.status,
+    billing: entry.billing || 'monthly',
     priceHistory: entry.priceHistory.map((p) => ({
       amount: p.amount,
       currency: p.currency,
@@ -20,9 +21,12 @@ function materialize(entry) {
     renewalDate: entry.renewalInDays == null ? null : daysFromNow(entry.renewalInDays).slice(0, 10),
     lastUsedAt: entry.lastUsedAtDaysAgo == null ? null : daysAgo(entry.lastUsedAtDaysAgo),
     trialEndsAt: entry.trialEndsInDays == null ? null : daysFromNow(entry.trialEndsInDays),
+    trialPrice: entry.trialPrice == null ? null : entry.trialPrice,
     draftAction: null,
     draftNote: null,
-    draftedAt: null
+    draftedAt: null,
+    acknowledged: [],
+    decision: null
   };
 }
 
@@ -51,6 +55,16 @@ function getSubscription(id) {
   return sub;
 }
 
+// The owner's own subscriptions, already validated by src/import.js. `replace` drops the
+// current list first (the activity log is kept: it records what happened, not what is).
+function addSubscriptions(records, { replace = false } = {}) {
+  if (replace) {
+    state.subscriptions = [];
+  }
+  state.subscriptions.push(...records);
+  return records;
+}
+
 function updateSubscription(id, updates) {
   const sub = getSubscription(id);
   Object.assign(sub, updates);
@@ -76,4 +90,4 @@ class ActivityLog {
 
 const activityLog = new ActivityLog();
 
-module.exports = { listSubscriptions, getSubscription, updateSubscription, activityLog, state, reset };
+module.exports = { listSubscriptions, getSubscription, addSubscriptions, updateSubscription, activityLog, state, reset };

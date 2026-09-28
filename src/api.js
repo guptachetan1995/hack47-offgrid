@@ -1,8 +1,9 @@
 const { invoke } = require('./invoke');
 const store = require('./store');
 const { tools } = require('./tools');
+const { sampleCsv } = require('./import');
 
-// The dashboard's four routes as plain functions, so the Express server and the
+// The dashboard's routes as plain functions, so the Express server and the
 // in-browser static demo (src/browser-entry.js) answer from the exact same code.
 
 function getState() {
@@ -15,6 +16,12 @@ function getActivityLog() {
 
 function getTools() {
   return tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
+}
+
+// Example CSV for the dashboard's import box, dated relative to today so it always trips
+// the rules. Only text: importing it is still the owner's import_subscriptions call.
+function getImportSample() {
+  return { csv: sampleCsv(new Date()) };
 }
 
 // No silent default: a caller that omits `actor` gets nothing, never the most privileged
@@ -31,4 +38,4 @@ async function postInvoke(body = {}) {
   return { status: 200, body: await invoke(tool, args || {}, actor) };
 }
 
-module.exports = { getState, getActivityLog, getTools, postInvoke };
+module.exports = { getState, getActivityLog, getTools, getImportSample, postInvoke };

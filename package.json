@@ -6,9 +6,10 @@
   "scripts": {
     "start": "node src/server.js",
     "build:pages": "node scripts/build-pages.js",
+    "mcp": "node src/mcp.js",
     "test": "jest --passWithNoTests",
-    "lint": "eslint src/ tests/ scripts/ --ext .js,.jsx --fix",
-    "lint:check": "eslint src/ tests/ scripts/ --ext .js,.jsx"
+    "lint": "eslint src/ tests/ scripts/ public/ --ext .js --fix",
+    "lint:check": "eslint src/ tests/ scripts/ public/ --ext .js"
   },
   "keywords": [
     "hack47-offgrid",

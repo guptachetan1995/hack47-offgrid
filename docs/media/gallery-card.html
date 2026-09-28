@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Subscription/Renewal Guard card</title>
+<!-- The Devpost thumbnail and gallery card, rendered to gallery-card.png at 1500x1000 (3:2).
+     Every figure on it is the app's own output for the seeded demo data. -->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1500px; height: 1000px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #11161d;
+    color: #f4f6f8;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 110px;
+  }
+  .kicker { font-size: 30px; letter-spacing: 0.08em; text-transform: uppercase; color: #9fb3c8; }
+  h1 { font-size: 92px; line-height: 1.02; margin: 18px 0 48px; font-weight: 750; }
+  .card {
+    background: #fbfbf9;
+    color: #1b1f24;
+    border-radius: 22px;
+    padding: 40px 46px;
+    width: 1120px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+  }
+  .row { display: flex; align-items: center; gap: 18px; font-size: 36px; font-weight: 650; }
+  .badge { font-size: 24px; font-weight: 600; background: #1e7e34; color: #fff; border-radius: 8px; padding: 4px 14px; }
+  .chip {
+    margin: 26px 0 30px;
+    display: inline-block;
+    background: #fff4e0;
+    color: #7a4200;
+    border: 3px solid #f0b35a;
+    border-radius: 14px;
+    padding: 16px 26px;
+    font-size: 46px;
+    font-weight: 700;
+  }
+  .chip small { font-size: 32px; font-weight: 600; color: #8a5a1c; margin-left: 12px; }
+  .actions { display: flex; align-items: center; gap: 22px; }
+  .approve { background: #1e7e34; color: #fff; font-size: 34px; font-weight: 700; border-radius: 12px; padding: 16px 40px; }
+  .who { font-size: 28px; color: #4a5561; }
+  .who b { color: #1b1f24; }
+  .foot { margin-top: 40px; font-size: 30px; color: #c7d2dd; }
+  .foot code { font-family: 'SF Mono', Menlo, monospace; color: #ffd28a; }
+</style>
+</head>
+<body>
+  <div class="kicker">Drafting is free. Approving is yours.</div>
+  <h1>Subscription/Renewal Guard</h1>
+  <div class="card">
+    <div class="row">StreamVault Plus <span class="badge">Active</span></div>
+    <div class="chip">Price rose 44% ($8.99→$12.99)<small>+$48.00/yr</small></div>
+    <div class="actions">
+      <span class="approve">Approve</span>
+      <span class="who">Only the owner's click. <b>The agent has no approve tool.</b></span>
+    </div>
+  </div>
+  <div class="foot">Any MCP agent gets four tools; <code>approve_action</code> is not one of them.</div>
+</body>
+</html>

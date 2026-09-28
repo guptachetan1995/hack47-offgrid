@@ -1,179 +1,111 @@
-# hack47-offgrid Demo Video — Script & Shot List
+# Subscription/Renewal Guard demo video — script and shot list
 
-This is the script for the demo video: narration text, shot list, the exact seeded state to
-start from, and the timing budget. **The agent-produced video is the final video.** It is
-rendered from this script as a frame-exact slideshow (each beat's real on-screen state
-captured and held for its scripted duration, with synthesized narration muxed over it), and
-there is no owner re-recording. The owner's only part is uploading the finished file to
-YouTube as Public and pasting the link back.
+The narration, shot list and on-screen sources for the demo video. It is rendered as a
+frame-exact slideshow: each beat's real on-screen state is captured with a headless
+browser and held for the beat's scripted duration, with synthesized narration laid over
+it. Every screen is the running app or the real output of a command; nothing on screen is
+typed in by hand.
+
+This is the script for the second cut. The first cut (2:10) opened on an idle list and had
+no model in the agent seat. This one opens on the flagged state, adds the recorded MCP
+session, an owner's keep, the yearly figures and bringing your own subscriptions, and uses
+larger terminal text.
 
 ## Target runtime
 
-**Scripted length: 2:10 (130.0s) across 9 beats. Rendered: 129.998s** (`ffprobe` on the
-final H.264/AAC file, 1600×900, 25 fps, rendered 2026-09-26). **No stated cap:** HACK47's own "What to Submit" list only says "Demo Video — show
-the project working, explain what was built", and no length ceiling was found on the rules
-page (checked live 24 Sep 2026). It is kept tight anyway. Every action here resolves
-instantly against an in-memory store, with no network- or provider-bound wait, so the pacing
-below follows the narration and the clicks alone. Three beats (1, 3, 8) run slightly longer
-than their first-draft narration needed. They were widened after the narration step warned
-the TTS would otherwise overrun and get cut off mid-word, and the times below are the
-widened, final numbers.
+**Scripted length: 2:19 (139.0 s) across 10 beats**, 11 shots. Every duration is
+a whole number of 40 ms frames (25 fps), so the rendered file should match the sum. HACK47
+states no length cap: its "What to Submit" list says only "Demo Video — show the project
+working, explain what was built" (checked 24 Sep 2026).
 
-## Recording setup — exact seeded state
+## Recording setup
 
-One terminal, one browser tab:
+Two fresh servers, each on a free loopback port and each started with `npm start`'s own
+code (`src/server.js`), with one difference: the process clock starts at the recorded MCP
+session's start, `2026-09-27T23:22:01.405Z`, and runs on from there. The seed stores its
+dates as offsets from "now", so both servers show exactly the dates that session saw, and
+Claude's notes (which quote those dates) match the cards they sit on.
 
-```bash
-npm install
-PORT=3178 npm start   # Subscription/Renewal Guard on http://127.0.0.1:3178
-```
+- **Server A** is fresh: beat 1 clicks Run Review on it, and beat 8's two direct HTTP calls
+  go to it.
+- **Server B** first receives the session's client messages from
+  [`mcp-transcript.jsonl`](./mcp-transcript.jsonl), replayed byte for byte through
+  `src/mcp.js`. That recreates Claude's three drafts (renegotiate StreamVault Plus, cancel
+  CloudBackup Pro, keep PixelCraft Design) and its refused `approve_action`. The render
+  stops if any replayed draft fails, if the approve isn't refused, or if the drafts differ.
+  Beats 3 to 7 run on server B through the owner link.
 
-Pick a port nothing else on the machine is using (check first with `lsof -i :3178`). The
-store is in-memory and changes as the demo runs, so start a fresh instance on its own port
-right before recording.
+Captured before recording, from real commands:
 
-Open `http://127.0.0.1:3178` in a browser window wide enough that no card wraps
-awkwardly. Do not click anything before recording starts. The seeded state that must be on
-screen at 0:00 is 5 subscriptions, all with no draft and no evidence banner:
+- Beat 2: `node scripts/mcp-relay.js --digest docs/mcp-transcript.jsonl`, one line per
+  message of the recorded session.
+- Beat 8: two `curl` calls to server A: `approve_action` as `actor: "agent"`, then as
+  `actor: "owner"` with no owner token.
+- Beat 9: `npm test`. Its test count is the number spoken in that beat's narration.
 
-| Service | Status | Latest price | Renews / trial ends | Last used |
-|---|---|---|---|---|
-| StreamVault Plus | Active | $12.99 (was $8.99) | renews 2026-10-01 | 2026-09-22 |
-| CloudBackup Pro | Active | $9.99 | renews 2026-10-15 | 2026-06-01 |
-| PixelCraft Design | Trial | $0.00 | trial ends 2026-09-28 | 2026-09-24 |
-| SonicStream | Active | $5.99 | renews 2026-11-04 | 2026-09-24 |
-| SafeVault Storage | Active | $3.99 | renews 2026-11-19 | 2026-09-23 |
+The hook's spoken figures (44%, six days to renewal, a trial in three days, 116 quiet
+days, $48.00 a year) are checked against the recorded session's `review_subscriptions`
+response before anything is captured.
 
-The seed stores dates as offsets from today, so the absolute dates above (captured
-2026-09-25) move forward with the recording date, and the relationships stay the same.
+## Shot list and narration
 
-## Findings from the dry run that shaped this script
+| # | Time | On screen | Action | Narration (verbatim) |
+|---|------|-----------|--------|----------------------|
+| 1 | 0:00–0:18 | Server A, straight to the flagged state: At stake in open flags $347.76/yr, three cards with evidence and yearly figures | Open, click **Run Review** | "A forty-four percent price rise, renewing in six days. A trial that turns paid in three. A backup nobody has opened in a hundred and sixteen days. Subscription/Renewal Guard finds all three, and changes nothing until you click Approve." |
+| 2 | 0:18–0:42 | Terminal, font 17: the transcript digest, revealed line by line. Four tools listed, Claude's three `apply_action` notes, then `← error -32602: Unknown tool: approve_action…` | Run the digest command | "This is a real model in the agent's seat: Claude, driving the four agent tools over MCP. It reviews, reads two records, and drafts three actions in its own words. Then, on purpose, it calls approve action, and the server answers: no such tool. There is nothing for it to call." |
+| 3 | 0:42–0:50 | Server B through the owner link: Claude's three drafts with its notes, every badge unchanged, $347.76/yr at stake | Open, click **Run Review** | "Its drafts land on the owner's dashboard, and wait. Every status still reads the same." |
+| 4 | 0:50–1:01 | StreamVault Plus → **Renegotiation sent**; Decided by you $48.00/yr | Click **Approve** on StreamVault Plus | "One click from the owner, and only now does a status change: renegotiation sent. Forty-eight dollars a year, decided by you." |
+| 5 | 1:01–1:10 | CloudBackup Pro's draft cleared, badge still Active, its evidence line back | Click **Reject** on CloudBackup Pro | "The backup might still be backing something up. Reject clears the draft, and nothing is cancelled." |
+| 6 | 1:10–1:23 | PixelCraft Design approved as kept: badge Active, Decided by you $227.88/yr; after a second review only CloudBackup Pro is flagged | Click **Approve** on PixelCraft Design, then **Run Review** | "Approve the keep, and the trial becomes a plan you chose. The next review leaves it alone." |
+| 7a | 1:23–1:36 | The import panel open, the sample CSV loaded, Replace ticked | Open **Add or import…**, click **Load sample**, tick **Replace the demo subscriptions** | "Bring your own subscriptions: paste a CSV, or add a row. It stays on your machine, and importing is the owner's action, never the agent's." |
+| 7b | 1:36–1:41 | The four imported subscriptions reviewed: three flagged, $383.76/yr at stake | Click **Import CSV**, then **Run Review** | (silent) |
+| 8 | 1:41–1:56 | Terminal, font 28: `approve_action` as agent → `"approve_action is an owner-only action; no agent tool can approve a draft."` (HTTP 200, `success: false`); as owner with no token → `HTTP 403` | Two `curl` calls | "Skip MCP and post to the server directly? As the agent, approve is refused inside invoke. Claiming to be the owner without this run's owner link gets a four-oh-three." |
+| 9 | 1:56–2:07 | Terminal, font 24: `npm test`, 9 suites, all passing | Run `npm test` | "140 tests hold this gate from every angle: the rules, the refusals, the MCP server, the real HTTP layer." (the count is read from the captured run) |
+| 10 | 2:07–2:19 | End card: live demo URL, repository URL, MCP transcript link | Hold | "Try it yourself. The live demo runs in your browser, and the code and the transcript are open source. Links are in the description." |
 
-These were confirmed before writing any narration, by starting the server fresh
-(`PORT=3177`, then a second fresh instance on `PORT=3178` for the browser pass) and walking
-the full path, both through direct `POST /api/invoke` calls and in a real browser tab:
-
-- **Exactly 3 of 5 subscriptions trip a rule, as the demo script in the
-  [README](../README.md#demo-walkthrough) says**: StreamVault Plus (price jump),
-  CloudBackup Pro (quiet usage) and PixelCraft Design (trial converting). SonicStream and
-  SafeVault Storage are untouched. `review_subscriptions` returns nothing for them, not a
-  "looks fine" placeholder. This is the beat that shows the agent doesn't invent work.
-- **Evidence text is copied verbatim from the live API response**, not invented (re-captured
-  2026-09-26, after the trial countdown was fixed to round up): `"Price rose 44%
-  ($8.99→$12.99) at the 2026-09-02 renewal."`, `"No usage seen since 2026-06-02 (116
-  days)."`, `"Trial converts to paid on 2026-09-29 (3 days away)."` The dates, the 116-day
-  and the 3-day figures are computed from the real clock at review time, so they move with
-  the actual recording date. Read whatever the running app shows, and don't hardcode
-  these exact numbers into the narration.
-- **The dashboard's own `Reject` button clears the draft without touching `status`.** After
-  rejecting CloudBackup Pro's cancel suggestion, its badge reads `Active` again, the same
-  as before the draft. The evidence line (`No usage seen since...`) and the action buttons
-  come back underneath, because the underlying rule still fires. Only the *draft* was
-  cleared.
-- **An approved card stops offering actions.** After StreamVault Plus is approved, its badge
-  reads "Renegotiation sent", and the evidence line and the Keep/Downgrade/Renegotiate/Cancel
-  buttons disappear. The dashboard only shows them for a subscription that is still active
-  or on trial. The chokepoint enforces the same rule on its own: `apply_action` on that
-  subscription is refused with `sub_streamvault is renegotiation_sent, not active/trial —
-  nothing to draft.`, so an approved subscription can't be reopened by a later draft.
-- **Both refusal beats can be shown two ways.** The dashboard's own "Try it as the agent"
-  panel, below the subscription cards, has two buttons that send the same two calls as
-  `actor: "agent"` through the same `invoke()`: **Agent: set status directly** (an
-  `apply_action` with a smuggled `status`) and **Agent: approve a draft**. The refusal shows
-  in the red alert at the top of the page and in the activity log. The shot list below uses
-  a terminal `curl` against the same running server for beats 6–7, because beat 7 also
-  needs the `GET /api/tools` listing, which only a direct call shows. The panel also
-  appears in any dashboard shot that scrolls below the cards.
-- **Exact text confirmed live against a freshly started server (2026-09-25)**:
-  - `apply_action` with `status: "cancelled"` smuggled into its own args returns
-    `{"success": false, "error": "apply_action cannot set status directly — only
-    approve_action can."}`, and the subscription's real `status` is untouched afterward.
-  - `approve_action` called with `actor: "agent"` returns `{"success": false, "error":
-    "approve_action is an owner-only action; no agent tool can approve a draft."}`.
-  - `GET /api/tools` lists exactly 4 tools (`list_subscriptions`, `review_subscriptions`,
-    `get_subscription`, `apply_action`). `approve_action` and `reject_action` never appear,
-    and every listed tool's description ends with the same sentence: *"Approve and Reject
-    are owner-only dashboard actions; no registered tool, including this one, can move a
-    subscription out of its drafted state."*
-  - The activity log after the full walkthrough shows 7 entries in order: `agent
-    review_subscriptions`, `agent apply_action` (draft), `owner approve_action`, `agent
-    apply_action` (second draft), `owner reject_action`, `agent apply_action` (refused,
-    smuggled status), `agent approve_action` (refused, wrong actor). Each one is attributed
-    to the actor that actually made it.
-
-## Shot list & narration
-
-| # | Time | Visual | Action | Narration (verbatim) |
-|---|------|--------|--------|------------------------|
-| 1 | 0:00–0:11.5 | Browser, idle seeded page, 5 subscriptions, no banners | Hold, no action | "Subscription/Renewal Guard watches your subscriptions for a price hike, quiet usage, or a trial about to convert. Nothing changes until you click Approve. Watch." |
-| 2 | 0:11.5–0:26.5 | Browser, click **Run Review**; 3 of 5 cards grow a yellow evidence line and four action buttons | Click Run Review | "Five subscriptions, one click. Three trip a rule — the other two are left alone, because nothing's wrong with them. Each flag carries its own evidence: the exact price change, the exact quiet-usage date, the exact trial deadline." |
-| 3 | 0:26.5–0:42.5 | Browser, click **Renegotiate** on StreamVault Plus; draft banner appears with the note and Approve/Reject | Click Renegotiate | "StreamVault Plus jumped 44% at its last renewal — $8.99 to $12.99 — and it's still used weekly. The agent drafts a renegotiate action citing those exact numbers. It's still just a draft." |
-| 4 | 0:42.5–0:52.5 | Browser, click **Approve**; badge changes from Active to Renegotiation sent, and the card's evidence line and action buttons go away | Click Approve | "One click to approve, and only now does the real status change — Renegotiation sent. That's the only moment anything about this subscription actually moved." |
-| 5a | 0:52.5–1:00.5 | Browser, click **Cancel** on CloudBackup Pro; draft banner with the quiet-usage note | Click Cancel | "CloudBackup Pro hasn't been touched in 116 days — the agent drafts cancel." |
-| 5b | 1:00.5–1:12.5 | Browser, click **Reject** on that same draft; badge stays Active, draft banner clears | Click Reject | "But maybe that's wrong: we're on an extended trip, not churned. Reject clears the draft. Status stays Active. No charge either way." |
-| 6 | 1:12.5–1:32.5 | Terminal — run the smuggled-status `curl` call, zoom on the `"error"` field | Run the command, pause on the output | "Now try to cheat: call `apply_action` directly, with a `status` field smuggled into the same request. Refused — apply_action can only ever draft. Only approve_action can change a real status, and it's never a tool an agent can call at all." |
-| 7 | 1:32.5–1:50.5 | Terminal — run the `GET /api/tools` call, show all 4 tool names, then one description's last sentence | Run the two commands | "Check the agent's own tool list — four tools, and approve_action isn't one of them. Tool discovery can't even see it. Every description ends with the same sentence, so there's no ambiguity about what this system will never let an agent do." |
-| 8 | 1:50.5–2:01.5 | Terminal — `npm test` from the entry root, scrolled to the summary line (`Tests: 59 passed, 59 total`) | Run the command, hold on the green summary | "Fifty-nine tests hold this gate from every angle — the rules, the refusals, the real HTTP layer. One button an agent can never press for itself: Approve." |
-| 9 | 2:01.5–2:10 | End card: a plain card listing the live demo URL `https://guptachetan1995.github.io/hack47-offgrid/` and the repository URL `https://github.com/guptachetan1995/hack47-offgrid`, no other motion | Hold, no action | "Try it yourself — the live demo runs right in your browser, and the code is open source. Links are in the description." |
-
-Beat 8's terminal lines are captured from a real `npm test` run, never typed by hand. If the
-test count changes again, re-capture the shot and update the spoken number to match.
+Each narration line was synthesized with `say -r 140` (the render's own voice and rate) on
+2026-09-28 and measured. Every line fits its beat with at least 2.3 s to spare; the
+tightest are beat 1 (15.5 s of 18 s) and beat 9 (8.7 s of 11 s). The render still warns
+if a line runs over. Beat 7b is a silent continuation: the still changes after a click
+while the previous line has already finished.
 
 ## Timing contingency
 
-Every segment above is either a fixed narration read or a near-instant tool call, with no
-real-world step of variable length. If a take runs long, trim in this order without
-dropping any of the four required beats (review flags real evidence, a draft gets approved,
-a draft gets rejected, a direct-API refusal is shown) or the end card:
+If a narration line runs long at render time, trim in this order, keeping the four
+required moments (flags with evidence, a real model refused at approve, an owner decision,
+a direct-HTTP refusal) and the end card:
 
-1. Shorten Scene 8's line to its first clause ("Fifty-nine tests hold this gate from every
-   angle.").
-2. Shorten Scene 2's narration by cutting the second sentence. The three evidence lines are
-   still readable on screen without being narrated one by one.
+1. Beat 1: drop the backup sentence ("A backup nobody has opened…").
+2. Beat 2: drop "It reviews, reads two records, and".
+3. Beat 9: drop "the MCP server, the real HTTP layer".
 
 ## What this script does not show
 
-- `downgrade` and `keep`. Both are real and tested (`tests/invoke.test.js`,
-  `tests/approval-gate.test.js`), but the demo walkthrough only exercises `renegotiate` and
-  `cancel`. A third or fourth action click would push past the strongest-two-minutes
-  framing without adding a beat the demo needs.
-- `get_subscription`. It is a read-only agent tool the dashboard never calls, because the
-  dashboard reads every subscription from `GET /api/state`, so calling it on camera shows
-  nothing new.
-- A price-jump, quiet-usage or trial-converting boundary case (14% vs 15%, 59 vs 60 days,
-  8 vs 7 days). These are covered by the boundary tests in `tests/rules.test.js`, not a
-  visual demo beat.
+- `downgrade`, and cancelling for real. Both are tested (`tests/invoke.test.js`,
+  `tests/approval-gate.test.js`); the story needs one approve, one reject and one keep.
+- The add-one-row form. The CSV path shows the same owner-only import.
+- A keep acknowledged on a subscription that stays active. Kept, the trial in beat 6
+  becomes a paid plan, so the trial rule stops firing for that reason. The acknowledgement
+  itself (the same price rise kept, not flagged again, a new one flagged) is step 8 of the
+  README walkthrough and is tested in `tests/invoke.test.js` and
+  `tests/pages-build.test.js`.
+- The static live demo. It runs the same code bundled into the page, and
+  `tests/pages-build.test.js` replays the demo story, the import and a sticky keep against
+  the built bundle.
+- Threshold boundaries (14% vs 15%, 59 vs 60 days, 8 vs 7 days). `tests/rules.test.js`
+  covers them.
 
 ## Dry-run verification
 
-The full path above was walked end to end against two freshly started server instances
-(`PORT=3177` for the direct-API pass, `PORT=3178` for the browser pass, both via
-`node src/server.js` after a clean `npm install`):
-
-1. Idle page: 5 subscriptions, no banners.
-2. Run Review: 3 of 5 flagged, with evidence text matching the live API response verbatim.
-3. Renegotiate drafted on StreamVault Plus.
-4. Approve: badge → "Renegotiation sent".
-5. Cancel drafted on CloudBackup Pro.
-6. Reject: badge back to "Active", draft cleared.
-7. Direct `apply_action` call with a smuggled `status` field: refused, exact error text
-   quoted above.
-8. Direct `approve_action` call as `actor: "agent"`: refused, exact error text quoted above.
-9. `GET /api/tools`: 4 tools, `approve_action`/`reject_action` absent.
-10. Activity log: 7 entries, each attributed correctly.
-
-Every screenshot, JSON body and log line quoted above is copied from that live run, not
-invented. Four browser screenshots were captured (idle page, review-flagged page,
-StreamVault draft-with-evidence panel, and final state with activity log), confirming that
-the dashboard renders exactly what the API returns.
-
-`npm test` (59 tests, 6 suites) and `bash verify.sh` both pass. The
-[README](../README.md#run-locally) has the captured output.
-
-**Render pipeline.** The shots are captured from a freshly started, uniquely ported server
-instance. The narration is synthesized per beat, with no overrun warnings after widening
-beats 1, 3 and 8 (beat 8's "Fifty-nine" read overran its first 10.5s budget by 80ms, so it
-took 0.5s from the end card, whose 7.0s narration still fits its 8.5s). Video and
-narration are then muxed; the final file measures 129.998s against the 130.0s shot-list
-sum. The browser beats select buttons by exact text (`button:text-is('Approve')`), because
-a substring match would also hit the "Agent: approve a draft" button in the agent panel.
+On 2026-09-28 the whole capture ran in its preflight mode, without recording: both
+servers started with the pinned clock, the transcript replay produced the three drafts
+and the refused approve, the three commands were captured, and every browser beat was
+driven headless and screenshotted at 1600×900. Checked against
+those stills: beat 1 shows $347.76/yr and the three evidence lines; beat 3 shows Claude's
+three drafts with every badge unchanged; beat 4 shows Renegotiation sent and $48.00/yr
+decided; beat 5 shows CloudBackup Pro Active with its evidence line back; beat 6 shows
+PixelCraft Design Active with $227.88/yr decided and only CloudBackup Pro flagged; beat 7b
+shows Fernhill Meal Box, Orbitalk Language Club and Lumen Notebook Pro flagged with
+$383.76/yr at stake. The terminal beats' final frames, drawn with the recorder's own
+terminal page, fill 762 (beat 2), 720 (beat 8) and 768 (beat 9) of the frame's 900 px. No
+video or narration was rendered in that pass.

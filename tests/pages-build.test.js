@@ -5,11 +5,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const vm = require('vm');
-const { build, MARKER } = require('../scripts/build-pages');
+const { build, MARKER, APP_TAG } = require('../scripts/build-pages');
 
 const ROOT = path.join(__dirname, '..');
 const SOURCE_HTML = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
-const OUTPUTS = ['index.html', 'guard.bundle.js', '.nojekyll'];
+const SOURCE_APP = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
+const OUTPUTS = ['index.html', 'app.js', 'guard.bundle.js', '.nojekyll'];
 const SV = 'sub_streamvault';
 
 let outDir;
@@ -40,7 +41,7 @@ function loadDemo() {
 }
 
 describe('static build output', () => {
-  test('writes the page, the bundle and .nojekyll', () => {
+  test('writes the page, its script, the bundle and .nojekyll', () => {
     OUTPUTS.forEach((f) => expect(fs.existsSync(path.join(outDir, f))).toBe(true));
   });
 
@@ -52,7 +53,7 @@ describe('static build output', () => {
     const bundleAt = html.indexOf(tag);
     expect(reactDom).toBeGreaterThan(-1);
     expect(bundleAt).toBeGreaterThan(reactDom);
-    expect(html.indexOf('<script>')).toBeGreaterThan(bundleAt);
+    expect(html.indexOf(`<script src="app.js?v=${hash}"></script>`)).toBeGreaterThan(bundleAt);
   });
 
   test('stamps the build hash in <head> for a deploy to poll for', () => {
@@ -65,12 +66,14 @@ describe('static build output', () => {
   test('the Express-served page keeps the marker and never loads the bundle', () => {
     expect(SOURCE_HTML.split(MARKER).length - 1).toBe(1);
     expect(SOURCE_HTML).not.toContain('guard.bundle.js');
+    expect(SOURCE_HTML).toContain(APP_TAG);
   });
 
-  test('the hand-written inline app script parses', () => {
-    const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
-    expect(inline).toHaveLength(1);
-    expect(() => new vm.Script(inline[0])).not.toThrow();
+  test('the dashboard script ships unchanged, parses, and the page has no inline script', () => {
+    const shipped = fs.readFileSync(path.join(outDir, 'app.js'), 'utf8');
+    expect(shipped).toBe(SOURCE_APP);
+    expect(() => new vm.Script(shipped)).not.toThrow();
+    expect(html).not.toMatch(/<script>/);
   });
 
   test('the bundle references nothing Node-only', () => {
@@ -82,7 +85,8 @@ describe('a bad template fails before anything is written', () => {
   test.each([
     ['no marker', SOURCE_HTML.replace(MARKER, ''), /exactly one <!-- pages:bundle -->, found 0/],
     ['a duplicated marker', SOURCE_HTML.replace(MARKER, MARKER + MARKER), /exactly one <!-- pages:bundle -->, found 2/],
-    ['a duplicated </head>', SOURCE_HTML.replace('</head>', '</head></head>'), /exactly one <\/head>, found 2/]
+    ['a duplicated </head>', SOURCE_HTML.replace('</head>', '</head></head>'), /exactly one <\/head>, found 2/],
+    ['no dashboard script tag', SOURCE_HTML.replace(APP_TAG, ''), /exactly one <script src="app.js"><\/script>, found 0/]
   ])('%s', (_label, bad, message) => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hack47-badtpl-'));
     const template = path.join(dir, 'index.html');
@@ -157,10 +161,42 @@ describe('the bundled demo runs the real chokepoint in-page', () => {
     expect(await statusOf('sub_cloudbackup')).toBe('active');
   });
 
+  test('the owner imports the sample in-page; the agent cannot import at all', async () => {
+    const { demo, agent, owner } = loadDemo();
+    const { csv } = await demo.get('/api/import-sample');
+
+    const planted = await agent('import_subscriptions', { csv });
+    expect(planted.success).toBe(false);
+    expect(planted.error).toMatch(/owner-only/);
+    expect((await demo.get('/api/state')).subscriptions).toHaveLength(5);
+
+    const imported = await owner('import_subscriptions', { csv, replace: true });
+    expect(imported.success).toBe(true);
+    expect((await demo.get('/api/state')).subscriptions.map((s) => s.service)).toEqual([
+      'Fernhill Meal Box', 'Orbitalk Language Club', 'Lumen Notebook Pro', 'Tidewire VPN'
+    ]);
+
+    const review = await agent('review_subscriptions', {});
+    expect(review.result.map((r) => [r.service, r.firedRules.map((f) => f.rule)])).toEqual([
+      ['Fernhill Meal Box', ['price_jump']],
+      ['Orbitalk Language Club', ['quiet_usage']],
+      ['Lumen Notebook Pro', ['trial_converting']]
+    ]);
+  });
+
+  test('an approved keep stays quiet on the next review in the built bundle too', async () => {
+    const { agent, owner } = loadDemo();
+    expect((await agent('apply_action', { id: SV, action: 'keep', note: 'Worth it even at $12.99.' })).success).toBe(true);
+    expect((await owner('approve_action', { id: SV })).success).toBe(true);
+    const review = await agent('review_subscriptions', {});
+    expect(review.result.map((r) => r.id)).not.toContain(SV);
+  });
+
   test('/api/tools lists exactly the four agent tools, never approve or reject', async () => {
     const { demo } = loadDemo();
     const names = (await demo.get('/api/tools')).map((t) => t.name);
     expect(names).toEqual(['list_subscriptions', 'review_subscriptions', 'get_subscription', 'apply_action']);
+    expect(names).not.toContain('import_subscriptions');
   });
 
   test('a missing actor or tool gets the same 400 body HTTP returns', async () => {

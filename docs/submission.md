@@ -3,173 +3,211 @@
 **Hackathon:** [HACK47: OFFGRID](https://hack47-offgrid.devpost.com/) ·
 **Deadline:** 15 Oct 2026, 12:00 AM EDT (~9:30 AM IST)
 
-This file is the copy for the submission form, the checklist it answers, and the split of
-who does what before submitting (see [Who does what before submitting](#who-does-what-before-submitting)).
+This file is the text for each field of the Devpost project page, followed by the HACK47
+"What to Submit" checklist it answers. Every figure in it comes from the code, the test
+run, the recorded MCP session or a linked public source.
 
-## Project Name
+## Devpost field: Project name
 
 Subscription/Renewal Guard
 
-## Short Description
+## Devpost field: Elevator pitch
 
-An agent watches your subscriptions for a price hike, quiet usage, or a trial about to
-convert — and drafts one specific action with the evidence behind it. Nothing changes until
-you click Approve.
+An agent flags subscription price hikes, quiet usage and converting trials, and drafts one action with the evidence. Any MCP agent can draft; only your click approves.
 
-## Problem
+## Devpost field: About the project
 
-Subscriptions fail in two directions, and the wrong one is the one nobody notices. A
-household or small business collects recurring charges the way a drawer collects loose
-change — a design tool a contractor set up and never handed off, a backup service whose
-price quietly doubled when its promotional rate expired. The person who'd notice the price
-hike is the same person too busy to open twelve billing pages a year to check. And the two
-ways an automated fix can go wrong don't cost the same: auto-cancel something still in use
-and the failure is total (data loss, a locked-out account); auto-approve a renewal that just
-jumped 40% and the failure is silent (the card gets charged, and the cancellation window has
-already passed by the time anyone notices). A calendar reminder doesn't fix this — it's
-inert, carries no evidence, and gets ignored the third time it fires for something that was
-fine.
+The story field, under Devpost's own headings.
 
-## Solution
+### Inspiration
 
-Subscription/Renewal Guard reviews tracked subscriptions against three signals — a price
-jump since the last renewal, a usage trail gone quiet, a free trial about to convert — and
-for anything that trips a threshold, drafts one specific action (keep, downgrade,
-renegotiate, or cancel) with the exact evidence that produced it: the price history, the
-last-seen usage date, the rule that fired.
+Subscriptions fail in two directions, and the wrong one is the one nobody notices. In a
+2022 C+R Research survey of 1,000 consumers, 42% said they had stopped using a
+subscription but forgot they were still paying for it, and people who estimated their
+subscription spend at $86 a month were spending $219 once it was itemized
+([source](https://www.crresearch.com/blog/subscription-service-statistics-and-costs/)).
+The person who would notice a price hike is the same person too busy to open twelve
+billing pages a year. And the two ways an automated fix can go wrong don't cost the same:
+auto-cancel something still in use and the failure is total (data loss, a locked-out
+account); let a renewal that just jumped 44% go through and the failure is silent (the
+card is charged, and the cancellation window has passed by the time anyone notices).
 
-Nothing about a subscription's real state changes because the agent drafted something.
-`apply_action` can only ever write a *draft* — attempting to smuggle a `status` field into
-its own arguments is refused and logged, not silently dropped. Turning a draft into a real
-state change is `approve_action`, and it is never registered as a tool an agent can call —
-the same structural gate this portfolio's
-[CALL-E entry](https://devpost.com/software/supplier-quote-agent) uses for `approve_task`,
-applied here to a different kind of irreversible click.
+An agent for this already exists, and it asks before acting. Rocket Money's Rowan,
+announced on 25 Aug 2026, texts a member before a trial turns paid, and cancels it when the
+member replies "cancel"
+([press release](https://www.prnewswire.com/news-releases/rocket-moneys-rowan-rewrites-what-ai-can-do-in-personal-finance-302859522.html)).
+There, the go-ahead is a reply in the same conversation the agent reads. This project takes
+the other route: the approval is not something the agent can be told, because approving is
+not something it has a tool for.
 
-## Demo Link
+### What it does
 
-https://guptachetan1995.github.io/hack47-offgrid/
+Subscription/Renewal Guard reviews your subscriptions against three rules: a price rise of
+more than 15% since the last renewal, no usage in 60+ days, and a free trial converting
+within 7 days. For each subscription that trips one, it shows the evidence and what it is
+worth a year, for example "Price rose 44% ($8.99→$12.99) at the 2026-09-03 renewal
+(+$48.00/yr)", and the agent drafts one action: keep, downgrade, renegotiate or cancel.
+The dashboard totals what is at stake in open flags and what you have decided.
+Subscriptions with nothing wrong get nothing back.
 
-The full dashboard running in the browser: the same `src/` domain code (`invoke`, store,
-rules, tools) bundled into the page, on fictional seeded data. Nothing is sent anywhere, and
-reloading resets it. The [demo walkthrough](../README.md#demo-walkthrough) is the path to
-click through.
+Drafting never changes a subscription. apply_action can only write a draft: a status field
+smuggled into its arguments is refused and logged, and a note that doesn't quote one of the
+rule's own figures is refused too ("cancel this trial" cites nothing). Approve, Reject and
+Import are owner-only and are never registered as tools, so no agent can call them, whether
+it is the dashboard's own agent buttons or a real model over MCP. An approved keep stays
+quiet until something new happens; an approved cancel, downgrade or renegotiate can't be
+reopened by a later draft.
 
-## Source Code
+It is local-first, which is the OFFGRID half of the idea: no bank login, no account, no
+aggregator. You can try it on your own subscriptions: the live demo takes a pasted CSV, or
+one row at a time, parses it in the browser and never sends it anywhere.
 
-https://github.com/guptachetan1995/hack47-offgrid
+### How we built it
 
-## Demo Video
+No model is bundled, and that is deliberate. The agent's side is a four-tool registry
+(list, review, get, draft) that any tool-calling model can drive, served over the Model
+Context Protocol by a small stdio server (node src/mcp.js). It is a thin front on the
+dashboard server: tools/list is the registry, and tools/call posts to the same
+invoke(tool, args, actor) chokepoint the dashboard's buttons use, with the actor fixed to
+"agent". The repo includes a recorded session with Claude (Anthropic) in that seat, run in
+Claude Code, the same AI coding agent that wrote the code, so it is a demonstration rather
+than an independent test. It reviewed the subscriptions and drafted three actions in its
+own words. Then, having just seen that approve_action is not in its tool list, it called
+it on purpose and was refused, and its drafts waited on the dashboard for the owner. On
+the dashboard itself, Run Review and the draft buttons make the same calls as the agent.
 
-https://youtu.be/hkDpW_DNd00 (2:10). Its script and shot list are in
-[`docs/video-script.md`](./video-script.md).
+Under that: an in-memory store seeded with 5 fictional subscriptions, a rules engine with
+the three thresholds and their yearly figures, a CSV and form importer that validates every
+row before adding any, and one invoke() that every write goes through, with an activity
+log recording each call's actor, refusals included. Stack: Node.js 20 and Express (one
+POST /api/invoke plus read-only routes, all answered by one api.js), a plain React 18
+dashboard script served as-is with no build step, and esbuild to bundle the same src/ code
+into the page for the GitHub Pages live demo, which runs with no server at all. 140 Jest
+tests and ESLint. The code was written with Claude Code, Anthropic's AI coding agent.
 
-## Tech Stack
+### Challenges we ran into
 
-- **Node.js 20 LTS**, npm
-- **Express** — the local server; one `POST /api/invoke` chokepoint every tool call and
-  every dashboard button goes through, plus `GET /api/state`, `GET /api/activity-log` and
-  `GET /api/tools`, all answered by [`src/api.js`](../src/api.js)
-- **Plain HTML/JS dashboard** — CDN React 18.2.0 via `React.createElement`, served as-is by
-  Express, mirrored by a readable JSX source ([`src/dashboard.jsx`](../src/dashboard.jsx))
-  kept in sync by hand for review
-- **esbuild** (pinned) — bundles the same `src/` domain code into `guard.bundle.js` for the
-  static live demo ([`scripts/build-pages.js`](../scripts/build-pages.js))
-- **GitHub Pages** — hosts the static live demo from a `gh-pages` branch, pushed manually
-  (no CI, no GitHub Actions)
-- **In-memory store**, seeded from fictional subscription records — no real billing
-  provider, no payment method, no network calls from the domain code
-- **Jest** — 59 tests across 6 suites; **ESLint** — lint, clean
+The owner-only gate had to be more than a prompt instruction, since an agent will
+eventually see real subscription data. It is structural: approve, reject and import are
+absent from the agent's tool registry, so neither GET /api/tools nor the MCP server can
+surface them, and invoke() refuses any actor but owner even when called directly. An
+earlier version still had a hole over HTTP: actor was just a field in the request, so a
+local process could post actor "owner" and approve. Now owner actions over HTTP also need
+a random per-run token that npm start prints only inside the owner link's #fragment,
+which browsers never send to the server. That is a single-user local check, not accounts:
+whoever can read that terminal is the owner.
 
-## Build Process
+The other challenge was running the demo in the browser without forking the logic. The
+in-memory store hands out live object references, which HTTP serializes away but which,
+in-page, would make React skip re-rendering. Every in-page response is JSON round-tripped
+exactly as HTTP would, so both transports behave the same.
 
-Built for a fully open brief ("no fixed theme, no mandatory stack — build what you want to
-exist"). The core is four pieces: an in-memory store seeded with 5 fictional subscriptions,
-a rules engine evaluating three thresholds (price jump over 15%, usage quiet 60+ days, trial
-converting within 7 days), the `invoke(tool, args, actor)` chokepoint every write goes
-through, and a dashboard that calls the exact same chokepoint the agent's tools call — there
-is no separate code path for the human's Approve/Reject clicks. The owner-only gate
-(`approve_action`/`reject_action`) is demonstrated structurally: it's absent from
-`GET /api/tools` (agent tool discovery can't even see it), and it refuses any actor but
-`owner` even when called directly against the internal `invoke()` function, tested at both
-the unit level and over a real HTTP socket.
+### Accomplishments that we're proud of
 
-The live demo came last and reuses that core rather than re-implementing it: the four HTTP
-routes were pulled into one module (`src/api.js`) that both Express and an in-browser
-transport call, and esbuild bundles it for GitHub Pages. The page's own "Try it as the
-agent" panel sends the two calls an over-reaching agent might make (a smuggled `status`, an
-agent-actor approve) through that same chokepoint, so both refusals are visible without a
-terminal. `tests/pages-build.test.js` runs the full demo story against the built bundle.
+A real model sat in the agent seat and could not approve its own draft, and the reason is
+structural: the tool doesn't exist for it. The recorded session shows the exact refusal.
+The dashboard and the agent share one invoke chokepoint, so auditing one function covers
+both. Every draft cites the numbers that produced it, and anyone can bring their own
+subscriptions to the live demo instead of taking the seeded ones on faith. 140 tests hold
+it: the rules and their boundaries, the refusals, the real HTTP layer, the MCP server over
+stdio, and the demo story replayed against the built bundle the live demo serves.
 
-What I'd improve next:
+### What we learned
 
-- A read-only adapter for one real billing provider behind the same `invoke()` chokepoint,
-  so the three rules run on real price and usage history while every state change stays
-  owner-only.
-- Real authentication for the owner actor. Today `actor` is a request field, which is only
-  safe because the server accepts loopback connections alone.
-- Persistence for drafts and the activity log across restarts.
-- Exposing the four-tool registry over MCP so any tool-calling agent can drive it directly.
+The two failure directions for a subscriptions agent, auto-cancel (total, immediate) and
+auto-approving a bad renewal (silent, delayed), aren't symmetric, and treating them as if
+they were is how a "helpful" agent causes real harm. The fix isn't more automation, it's a
+structural gate that makes the irreversible click a human's alone. And an actor field is
+only a gate inside one process: over HTTP it is a claim, which is why owner actions there
+now need the per-run owner token.
+
+### What's next for Subscription/Renewal Guard
+
+The first real data source is the one people already have, a card or bank statement CSV
+export, so nothing needs a bank login. The first users are households, and small
+businesses paying for many SaaS seats, where one quiet price rise repeats across every
+seat.
+
+- A mapper from common card and bank CSV exports to the import format, still in the browser.
+- Renewal and receipt emails, parsed locally, to fill in price history and renewal dates.
+- A read-only adapter for one real billing provider behind the same invoke() chokepoint:
+  real price and usage history, every state change still owner-only.
+- Persistence for subscriptions, drafts, decisions and the activity log.
+- Real owner authentication for a hosted, multi-device version, replacing the per-run owner link.
+
+## Devpost field: Built with
+
+esbuild, eslint, express.js, github-pages, javascript, jest, model-context-protocol,
+node.js, react, claude
+
+## Devpost field: "Try it out" links
+
+- https://guptachetan1995.github.io/hack47-offgrid/ (live demo)
+- https://github.com/guptachetan1995/hack47-offgrid (source)
+- https://github.com/guptachetan1995/hack47-offgrid/blob/main/docs/mcp-transcript.md (the recorded MCP session)
+
+## Devpost field: Video demo link
+
+https://youtu.be/hkDpW_DNd00
+
+## Devpost field: Image gallery
+
+Thumbnail: [`docs/media/gallery-card.png`](./media/gallery-card.png) (1500×1000, 3:2),
+rendered from [`docs/media/gallery-card.html`](./media/gallery-card.html).
+
+Images, with captions:
+
+| Image | Caption |
+|---|---|
+| [`gallery-card.png`](./media/gallery-card.png) | The agent drafts. Only the owner's click approves, and no agent has an approve tool. |
+| [`review-with-money-at-stake.png`](./media/review-with-money-at-stake.png) | One review on the live demo: 3 of 5 flagged, each with its evidence and yearly figure. $347.76/yr at stake in open flags. |
+| [`mcp-drafts-awaiting-owner.png`](./media/mcp-drafts-awaiting-owner.png) | Claude (Anthropic), run in Claude Code, drove the four agent tools over MCP and drafted these three actions in its own words. It then called approve_action on purpose and was refused; the drafts wait for the owner. |
+| [`import-your-own-csv.png`](./media/import-your-own-csv.png) | Bring your own subscriptions: paste a CSV or add a row. It is parsed in the browser and never leaves the page. |
+
+## HACK47 "What to Submit" checklist
+
+Read live 24 Sep 2026 from <https://hack47-offgrid.devpost.com/>, and where each item is
+answered on the Devpost page:
+
+| Item | Answered by |
+|---|---|
+| Project Name | [Project name](#devpost-field-project-name) |
+| Short Description — what you built, in 1-2 sentences | [Elevator pitch](#devpost-field-elevator-pitch) |
+| Problem — what problem, who experiences it | [Inspiration](#inspiration) |
+| Solution — how the project solves it | [What it does](#what-it-does) |
+| Demo Link — a working demo whenever possible | ["Try it out" links](#devpost-field-try-it-out-links): the live demo |
+| Source Code — link to the GitHub/GitLab repository | ["Try it out" links](#devpost-field-try-it-out-links): the repository |
+| Demo Video — show the project working, explain what was built | [Video demo link](#devpost-field-video-demo-link) |
+| Tech Stack — major technologies, APIs, models, tools used | [How we built it](#how-we-built-it) and [Built with](#devpost-field-built-with) |
+| Build Process — what was built during OFFGRID, and what you'd improve next | [How we built it](#how-we-built-it) and [What's next](#whats-next-for-subscriptionrenewal-guard) |
 
 ## Judging criteria — where to look
 
 | Criterion | Where the evidence is |
 |---|---|
-| Originality | The evidence-cited draft note (`apply_action` refuses a note that doesn't reference the rule's own numbers) — [README § Tools](../README.md#tools), [`src/invoke.js`](../src/invoke.js) |
-| Impact | [Problem](#problem) above — a concrete household/small-business scenario and the asymmetric cost of getting either failure direction wrong |
-| Execution | 59 tests passing, lint clean, `verify.sh` runs the real suite, and a working [live demo](https://guptachetan1995.github.io/hack47-offgrid/) — [README § Run locally](../README.md#run-locally) |
-| Product Thinking | The dashboard and the agent share one `invoke` chokepoint; `review_subscriptions` doesn't manufacture work on healthy subscriptions — [README § Demo walkthrough](../README.md#demo-walkthrough) |
-| Technical Depth | The owner-only gate is structural (tool-registry exclusion + actor check), not a prompt instruction — [`tests/approval-gate.test.js`](../tests/approval-gate.test.js), [README § Architecture](../README.md#architecture) |
-| Potential | [README § Architecture](../README.md#architecture) — the same chokepoint pattern extends to any recurring-decision domain, not just subscriptions |
+| Originality | The approval gate an agent can't be talked into: approve is not in its tool list, shown by a real model over MCP ([transcript](./mcp-transcript.md)); contrasted with reply-to-approve agents in [Inspiration](#inspiration) |
+| Impact | [Inspiration](#inspiration): the C+R Research figures and the asymmetric cost of the two failure directions; each flag's yearly figure and the at-stake total on the dashboard |
+| Execution | 140 tests passing, lint clean, `verify.sh` runs the real suite, and a working [live demo](https://guptachetan1995.github.io/hack47-offgrid/) that also takes your own CSV — [README § Run locally](../README.md#run-locally) |
+| Product Thinking | Bring-your-own subscriptions, a keep that sticks, yearly figures, and one `invoke` chokepoint for the dashboard and the agent — [README § Demo walkthrough](../README.md#demo-walkthrough) |
+| Technical Depth | The gate is structural (tool-registry exclusion, actor check, per-run owner token over HTTP), and the MCP server is a thin front on the same chokepoint — [`tests/approval-gate.test.js`](../tests/approval-gate.test.js), [`tests/mcp.test.js`](../tests/mcp.test.js), [README § Architecture](../README.md#architecture) |
+| Potential | [What's next](#whats-next-for-subscriptionrenewal-guard): statement CSV exports first, then receipts and a read-only billing adapter, for households and many-seat small businesses |
 
 ## What this entry does not claim
 
-- **No real billing provider, no payment method, ever.** Only fictional, seeded in-memory
-  subscription records — [`fake-data/seed-subscriptions.json`](../fake-data/seed-subscriptions.json).
+- **No real billing provider, no payment method, ever.** Seeded fictional subscriptions
+  ([`fake-data/seed-subscriptions.json`](../fake-data/seed-subscriptions.json)) or ones the
+  owner types or pastes in; nothing is read from a bank or an inbox.
 - **No persistence across restarts.** The store is in-memory; a server restart or a reload
   of the live demo resets to the seeded fixtures.
 - **The live demo is static.** GitHub Pages serves the page and the bundled domain code;
-  there is no hosted server, and nothing leaves the browser.
+  there is no hosted server, and nothing leaves the browser. The MCP server needs the
+  local server (`npm start`).
 - **No bundled language model.** The agent surface is the four-tool registry
-  ([`src/tools.js`](../src/tools.js)); the dashboard's Run Review and draft buttons send the
-  same calls as `actor: "agent"`.
-- **The demo runs against fictional data only.** Evidence that the plumbing and the approval
-  gate work, not a real subscription-tracking integration.
-
-## Submission checklist
-
-HACK47's "What to Submit" list (read live 24 Sep 2026 from
-<https://hack47-offgrid.devpost.com/>), and where each item is answered:
-
-| Item | Answered by |
-|---|---|
-| Project Name | [Project Name](#project-name) |
-| Short Description — what you built, in 1-2 sentences | [Short Description](#short-description) |
-| Problem — what problem, who experiences it | [Problem](#problem) |
-| Solution — how the project solves it | [Solution](#solution) |
-| Demo Link — a working demo whenever possible | [Demo Link](#demo-link) |
-| Source Code — link to the GitHub/GitLab repository | [Source Code](#source-code) |
-| Demo Video — show the project working, explain what was built | [Demo Video](#demo-video) |
-| Tech Stack — major technologies, APIs, models, tools used | [Tech Stack](#tech-stack) |
-| Build Process — what was built during OFFGRID, and what you'd improve next | [Build Process](#build-process) |
-
-## Who does what before submitting
-
-The agent does everything except two steps, and the owner does exactly those two.
-
-**Agent:**
-
-| # | Step |
-|---|---|
-| 1 | Produce the final demo video from [`docs/video-script.md`](./video-script.md). The agent-produced video is the one submitted, with no owner re-recording, and it is handed over with its YouTube title, description, tags, category and visibility (Public) |
-| 2 | Publish this repository publicly at https://github.com/guptachetan1995/hack47-offgrid |
-| 3 | Deploy the live demo to https://guptachetan1995.github.io/hack47-offgrid/ and walk the demo path on the live URL |
-| 4 | Fill the whole Devpost draft from this file: every field above, the "Try it out" links (repo and live demo), the thumbnail and gallery screenshots |
-| 5 | After the owner pastes the YouTube link: add it to the draft, then verify every [checklist](#submission-checklist) line against the live draft, the live demo and the public repo before handing back |
-
-**Owner:**
-
-| # | Step |
-|---|---|
-| 1 | Upload the agent-produced video to YouTube with visibility **Public**, and paste the link back |
-| 2 | Once the agent reports the draft verified: tick the agreement box and click **Submit**, before 15 Oct 2026, 12:00 AM EDT |
+  ([`src/tools.js`](../src/tools.js)), served over MCP by [`src/mcp.js`](../src/mcp.js).
+  The recorded session is one run of Claude through a small relay client
+  ([`scripts/mcp-relay.js`](../scripts/mcp-relay.js)), in Claude Code, which also wrote the
+  code; the MCP server has not been tried with Claude Desktop or other clients.
+- **The owner check is single-user and local.** The per-run owner link stops an agent or
+  script that doesn't have it; it is not multi-user authentication.
+- **Yearly figures are estimates from the price history**, monthly unless marked yearly,
+  and describe what a finding concerns, not a promised saving.

@@ -5,22 +5,24 @@ const esbuild = require('esbuild');
 
 const ROOT = path.join(__dirname, '..');
 const MARKER = '<!-- pages:bundle -->';
+const APP_TAG = '<script src="app.js"></script>';
 
-// Builds the static live demo: the dashboard page plus one bundle of the real
-// src/ domain code (invoke/store/rules/tools via api.js), so the browser runs the same
-// chokepoint the Express server does. A relative outDir resolves against the entry root.
+// Builds the static live demo: the dashboard page, its script (public/app.js, copied as-is)
+// and one bundle of the real src/ domain code (invoke/store/rules/tools/import via api.js),
+// so the browser runs the same chokepoint the Express server does. A relative outDir
+// resolves against the entry root.
 function build(outDir = path.join('dist', 'pages'), { template: templateFile = path.join(ROOT, 'public', 'index.html') } = {}) {
   // Checked before anything is written, so a bad template never leaves a half-built outDir.
   const template = fs.readFileSync(templateFile, 'utf8');
   const name = path.relative(ROOT, templateFile);
-  const markers = template.split(MARKER).length - 1;
-  if (markers !== 1) {
-    throw new Error(`${name} must contain exactly one ${MARKER}, found ${markers}`);
+  const count = (needle) => template.split(needle).length - 1;
+  for (const needle of [MARKER, '</head>', APP_TAG]) {
+    const found = count(needle);
+    if (found !== 1) {
+      throw new Error(`${name} must contain exactly one ${needle}, found ${found}`);
+    }
   }
-  const heads = template.split('</head>').length - 1;
-  if (heads !== 1) {
-    throw new Error(`${name} must contain exactly one </head>, found ${heads}`);
-  }
+  const app = fs.readFileSync(path.join(path.dirname(templateFile), 'app.js'));
 
   const out = path.resolve(ROOT, outDir);
   fs.mkdirSync(out, { recursive: true });
@@ -47,19 +49,22 @@ function build(outDir = path.join('dist', 'pages'), { template: templateFile = p
     .createHash('sha256')
     .update(fs.readFileSync(bundleFile))
     .update(template)
+    .update(app)
     .digest('hex')
     .slice(0, 12);
 
   const html = template
     .replace('</head>', `  <meta name="guard-build" content="${hash}">\n  </head>`)
-    .replace(MARKER, `<script src="guard.bundle.js?v=${hash}"></script>`);
+    .replace(MARKER, `<script src="guard.bundle.js?v=${hash}"></script>`)
+    .replace(APP_TAG, `<script src="app.js?v=${hash}"></script>`);
   fs.writeFileSync(path.join(out, 'index.html'), html);
+  fs.writeFileSync(path.join(out, 'app.js'), app);
   fs.writeFileSync(path.join(out, '.nojekyll'), '');
 
   return { outDir: out, hash };
 }
 
-module.exports = { build, MARKER };
+module.exports = { build, MARKER, APP_TAG };
 
 if (require.main === module) {
   const { outDir, hash } = build(process.argv[2]);

@@ -9,7 +9,8 @@ const viaJson = (v) => JSON.parse(JSON.stringify(v));
 const GET_ROUTES = {
   '/api/state': api.getState,
   '/api/activity-log': api.getActivityLog,
-  '/api/tools': api.getTools
+  '/api/tools': api.getTools,
+  '/api/import-sample': api.getImportSample
 };
 
 async function get(path) {

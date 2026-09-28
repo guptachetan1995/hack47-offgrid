@@ -2,9 +2,11 @@ const { invoke } = require('./invoke');
 
 // Appended verbatim to every tool's description (asserted by tests/approval-gate.test.js)
 // so an agent reading any single tool description sees the thesis stated: changing a
-// subscription's real state is owner-only, and it is nobody's registered tool.
+// subscription's real state, or what counts as one, is owner-only and nobody's registered
+// tool. These four are the whole agent surface: GET /api/tools and the MCP server
+// (src/mcp.js) both list exactly this array.
 const OWNER_ONLY_CLAUSE =
-  'Approve and Reject are owner-only dashboard actions; no registered tool, including this one, can move a subscription out of its drafted state.';
+  'Approve, Reject and Import are owner-only dashboard actions; no registered tool, including this one, can change a subscription\'s real status or add a subscription.';
 
 const tools = [
   {
@@ -25,7 +27,7 @@ const tools = [
   {
     name: 'review_subscriptions',
     description:
-      'Run the three review rules (price jump over 15%, no usage in 60+ days, a trial converting within 7 days) against every active/trial subscription, and return only the ones that currently trip at least one rule, with the evidence for each. Does NOT: draft an action, change any subscription, or return anything for a subscription nothing is wrong with. ' +
+      'Run the three review rules (price jump over 15%, no usage in 60+ days, a trial converting within 7 days) against every active/trial subscription, and return only the ones that currently trip at least one rule, with the evidence for each finding and the yearly dollars it concerns (annualAtStake). Does NOT: draft an action, change any subscription, return anything for a subscription nothing is wrong with, or repeat a finding the owner already approved keeping (a new price change or a new quiet stretch still flags). ' +
       OWNER_ONLY_CLAUSE,
     inputSchema: { type: 'object', properties: {} },
     async execute(input, actor = 'agent') {
@@ -47,7 +49,7 @@ const tools = [
   {
     name: 'apply_action',
     description:
-      'Draft one action (keep/downgrade/renegotiate/cancel) for a subscription that review_subscriptions actually flagged, with a note citing the specific evidence (the exact price figures, the quiet-usage date, or the trial date) that rule produced. Does NOT: change the subscription\'s real status, apply to a subscription that is no longer active or on trial (already cancelled, downgraded or renegotiated) or has no currently-fired rule, or accept a note that doesn\'t cite real evidence — a bare "cancel this" is refused. ' +
+      'Draft one action (keep/downgrade/renegotiate/cancel) for a subscription that review_subscriptions actually flagged, with a note that quotes one of the figures that rule produced: a price ($8.99), the percentage (44%), the last-used date, the quiet day count (116 days), the trial end date or the days left (3 days). Does NOT: change the subscription\'s real status, apply to a subscription that is no longer active or on trial (already cancelled, downgraded or renegotiated) or has no open finding, or accept a note that quotes no figure — "cancel this" or "cancel this trial" is refused. ' +
       OWNER_ONLY_CLAUSE,
     inputSchema: {
       type: 'object',

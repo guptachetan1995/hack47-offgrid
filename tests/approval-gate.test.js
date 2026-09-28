@@ -14,15 +14,23 @@ async function draftSomething() {
 describe('the approval gate is structural, not a convention', () => {
   beforeEach(() => store.reset());
 
-  test('approve_action and reject_action are not in the agent tool registry', () => {
+  test('approve_action, reject_action and import_subscriptions are not in the agent tool registry', () => {
     const names = tools.map((t) => t.name);
+    expect(names).toEqual(['list_subscriptions', 'review_subscriptions', 'get_subscription', 'apply_action']);
     expect(names).not.toContain('approve_action');
     expect(names).not.toContain('reject_action');
+    expect(names).not.toContain('import_subscriptions');
+  });
+
+  test('every tool description says what it does NOT do, or that it is read-only', () => {
+    for (const tool of tools) {
+      expect(tool.description).toMatch(/Does NOT|Read-only/);
+    }
   });
 
   test('every tool description states the owner-only clause', () => {
     for (const tool of tools) {
-      expect(tool.description).toMatch(/owner-only dashboard actions/);
+      expect(tool.description).toMatch(/Approve, Reject and Import are owner-only dashboard actions/);
     }
   });
 

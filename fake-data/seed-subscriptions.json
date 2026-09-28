@@ -31,7 +31,8 @@
     ],
     "renewalInDays": null,
     "lastUsedAtDaysAgo": 1,
-    "trialEndsInDays": 3
+    "trialEndsInDays": 3,
+    "trialPrice": 14.99
   },
   {
     "id": "sub_musicapp",
